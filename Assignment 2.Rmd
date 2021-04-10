@@ -1,0 +1,360 @@
+---
+title: "Assignment - 2"
+author: "Ross Adams"
+date: "Due: 9/30/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(Hotelling)
+library(car)
+library(GGally)
+```
+
+In the setup chunk, `ggplot2` and `dplyr` have already been added to the library. Add any other packages you wish to use to the setup chunk as well.
+
+# Instructions
+
+Example 1.4 concerned the comparison between prehistoric dogs from Thailand and six other related animal groups in terms of mean mandible measurements. Table 4.5 (page 75 - 77) shows further data for the comparison of these groups, which are part of the more extensive data discussed in the paper by Higham et al. (1980).
+
+### Problem 1
+
+Test for significant differences between the five species in terms of the mean values and the variation in the nine variables. Test both for overall differences and for differences between the prehistoric Thai dogs and each of the other groups singly. What conclusion do you draw with regard to the similarity between prehistoric Thai dogs and the other groups?
+
+Prehistoric vs. Modern
+
+```{r}
+dogs <- read.csv("dogsFull.csv",header=TRUE)
+dogs <- dogs[-1]
+
+# Testing overall means between prehistoric and modern with Hotelling's test
+dogsMod <- dogs %>% 
+  filter(breed %in% c("modern", "prehistoric")) 
+t2testDog <- hotelling.test(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 ~ breed, data = dogsMod)
+t2testDog 
+
+# Testing individual means between prehistoric and modern with T2 test
+with(data = dogs,
+     t.test(x1[breed=="prehistoric"],
+            x1[breed=="modern"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x2[breed=="prehistoric"],
+            x2[breed=="modern"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x3[breed=="prehistoric"],
+            x3[breed=="modern"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x4[breed=="prehistoric"],
+            x4[breed=="modern"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x5[breed=="prehistoric"],
+            x5[breed=="modern"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x6[breed=="prehistoric"],
+            x6[breed=="modern"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x7[breed=="prehistoric"],
+            x7[breed=="modern"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x8[breed=="prehistoric"],
+            x8[breed=="modern"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x9[breed=="prehistoric"],
+            x9[breed=="modern"], var.equal = TRUE))
+
+# Testing overall variance between prehistoric and modern with Van Valen's test
+matstand <- scale(dogs[,2:10])
+matmod <- matstand[dogs$breed == "modern",]
+matpre <- matstand[dogs$breed == "prehistoric",]
+vecmedianmod <- apply(matmod,2,median)
+vecmedianpre <- apply(matpre,2,median)
+matabsdevmod <- abs(matmod - matrix(rep(vecmedianmod,nrow(matmod)),
+                                    nrow=nrow(matmod), byrow=TRUE))
+matabsdevpre <- abs(matpre - matrix(rep(vecmedianpre,nrow(matpre)),
+                                    nrow=nrow(matpre), byrow=TRUE))
+matabsdev.all <- rbind(matabsdevmod,matabsdevpre)
+matabsdev.all <- data.frame(dogsMod$breed, matabsdev.all)
+d.all <- data.frame(dogsMod$breed,sqrt(rowSums(matabsdev.all[,-1]^2)))
+colnames(d.all)[2] <- "dij"
+with(d.all, t.test(dij[dogsMod$breed=="modern"], dij[dogsMod$breed=="prehistoric"],
+                   var.equal=TRUE, alternative="less"))
+sprintf("d-values for Modern: Mean = %2.3f, Variance = %2.3f",
+        mean(d.all$dij[dogsMod$breed=="modern"]),var(d.all$dij[dogsMod$breed=="modern"]))
+sprintf("d-values for Prehistoric: Mean = %2.3f, Variance = %2.3f",
+        mean(d.all$dij[dogsMod$breed=="prehistoric"]),var(d.all$dij[dogsMod$breed=="prehistoric"]))
+
+# Testing individual variance between prehistoric and modern with Levene's test
+leveneTest(x1 ~ breed, data = dogsMod)
+leveneTest(x2 ~ breed, data = dogsMod)
+leveneTest(x3 ~ breed, data = dogsMod)
+leveneTest(x4 ~ breed, data = dogsMod)
+leveneTest(x5 ~ breed, data = dogsMod)
+leveneTest(x6 ~ breed, data = dogsMod)
+leveneTest(x7 ~ breed, data = dogsMod)
+leveneTest(x8 ~ breed, data = dogsMod)
+leveneTest(x9 ~ breed, data = dogsMod)
+
+```
+When comparing the prehistoric dog to the modern dog, we see that there is enough evidence to suggest at least one variable mean differs between groups based on the Hotelling's Test. This hypothesis is supported by the T2 test of variable x6 where we reject the null hypothesis of equal means.
+However, when analyzing the variance both at the univariate and multivariate levels we do not find significant evidence to suggest a difference in variation.
+Taking the analysis of means and variance together we can conclude that although the x6 variable may have evolved over time, the modern dog is infact very similiar to the prehistoric dog on almost every measure.
+
+Prehistoric vs. Jackal
+
+```{r}
+# Testing overall means between prehistoric and modern with Hotelling's test
+dogsJack <- dogs %>% 
+  filter(breed %in% c("jackal", "prehistoric")) 
+t2testDog <- hotelling.test(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 ~ breed, data = dogsJack)
+t2testDog 
+
+# Testing individual means between prehistoric and modern with T2 test
+with(data = dogs,
+     t.test(x1[breed=="prehistoric"],
+            x1[breed=="jackal"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x2[breed=="prehistoric"],
+            x2[breed=="jackal"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x3[breed=="prehistoric"],
+            x3[breed=="jackal"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x4[breed=="prehistoric"],
+            x4[breed=="jackal"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x5[breed=="prehistoric"],
+            x5[breed=="jackal"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x6[breed=="prehistoric"],
+            x6[breed=="jackal"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x7[breed=="prehistoric"],
+            x7[breed=="jackal"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x8[breed=="prehistoric"],
+            x8[breed=="jackal"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x9[breed=="prehistoric"],
+            x9[breed=="jackal"], var.equal = TRUE))
+
+# Testing overall variance between prehistoric and jackal with Van Valen's test
+matstand <- scale(dogs[,2:10])
+matjack <- matstand[dogs$breed == "jackal",]
+matpre <- matstand[dogs$breed == "prehistoric",]
+vecmedianjack <- apply(matjack,2,median)
+vecmedianpre <- apply(matpre,2,median)
+matabsdevjack <- abs(matjack - matrix(rep(vecmedianjack,nrow(matjack)),
+                                    nrow=nrow(matjack), byrow=TRUE))
+matabsdevpre <- abs(matpre - matrix(rep(vecmedianpre,nrow(matpre)),
+                                    nrow=nrow(matpre), byrow=TRUE))
+matabsdev.all <- rbind(matabsdevjack,matabsdevpre)
+matabsdev.all <- data.frame(dogsJack$breed, matabsdev.all)
+d.all <- data.frame(dogsJack$breed,sqrt(rowSums(matabsdev.all[,-1]^2)))
+colnames(d.all)[2] <- "dij"
+with(d.all, t.test(dij[dogsJack$breed=="jackal"], dij[dogsJack$breed=="prehistoric"],
+                   var.equal=TRUE, alternative="less"))
+sprintf("d-values for jackal: Mean = %2.3f, Variance = %2.3f",
+        mean(d.all$dij[dogsJack$breed=="jackal"]),var(d.all$dij[dogsJack$breed=="jackal"]))
+sprintf("d-values for Prehistoric: Mean = %2.3f, Variance = %2.3f",
+        mean(d.all$dij[dogsJack$breed=="prehistoric"]),var(d.all$dij[dogsJack$breed=="prehistoric"]))
+
+# Testing individual variance between prehistoric and jackal with Levene's test
+leveneTest(x1 ~ breed, data = dogsJack)
+leveneTest(x2 ~ breed, data = dogsJack)
+leveneTest(x3 ~ breed, data = dogsJack)
+leveneTest(x4 ~ breed, data = dogsJack)
+leveneTest(x5 ~ breed, data = dogsJack)
+leveneTest(x6 ~ breed, data = dogsJack)
+leveneTest(x7 ~ breed, data = dogsJack)
+leveneTest(x8 ~ breed, data = dogsJack)
+leveneTest(x9 ~ breed, data = dogsJack)
+```
+When comparing the prehistoric dog to the jackal, we find sufficient evidence to conclude that at least one variable mean differs between groups. This hypothesis is supported by the T2 tests where we reject the null hypothesis and conclude that there is not enough evidence to suggest equal means for all 9 of the variables. Furthermore, the Van Valen's test also does not provide sufficient evidence to assume equal covariance matrices. This conclusion is supported by the Levene's tests of the x1 and x4 variables where we do not have sufficient evidence to assume equal covariance matrices.
+Overall, we would concluded that there are significant differences between the prehistoric dog and the jackal.
+
+Prehistoric vs. Coun
+
+```{r}
+# Testing overall means between prehistoric and modern with Hotelling's test
+dogsCoun <- dogs %>% 
+  filter(breed %in% c("coun", "prehistoric")) 
+t2testDog <- hotelling.test(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 ~ breed, data = dogsCoun)
+t2testDog 
+
+# Testing individual means between prehistoric and coun with T2 test
+with(data = dogs,
+     t.test(x1[breed=="prehistoric"],
+            x1[breed=="coun"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x2[breed=="prehistoric"],
+            x2[breed=="coun"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x3[breed=="prehistoric"],
+            x3[breed=="coun"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x4[breed=="prehistoric"],
+            x4[breed=="coun"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x5[breed=="prehistoric"],
+            x5[breed=="coun"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x6[breed=="prehistoric"],
+            x6[breed=="coun"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x7[breed=="prehistoric"],
+            x7[breed=="coun"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x8[breed=="prehistoric"],
+            x8[breed=="coun"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x9[breed=="prehistoric"],
+            x9[breed=="coun"], var.equal = TRUE))
+
+# Testing overall variance between prehistoric and coun with Van Valen's test
+matstand <- scale(dogs[,2:10])
+matcoun <- matstand[dogs$breed == "coun",]
+matpre <- matstand[dogs$breed == "prehistoric",]
+vecmediancoun <- apply(matcoun,2,median)
+vecmedianpre <- apply(matpre,2,median)
+matabsdevcoun <- abs(matcoun - matrix(rep(vecmediancoun,nrow(matcoun)),
+                                    nrow=nrow(matcoun), byrow=TRUE))
+matabsdevpre <- abs(matpre - matrix(rep(vecmedianpre,nrow(matpre)),
+                                    nrow=nrow(matpre), byrow=TRUE))
+matabsdev.all <- rbind(matabsdevcoun,matabsdevpre)
+matabsdev.all <- data.frame(dogsCoun$breed, matabsdev.all)
+d.all <- data.frame(dogsCoun$breed,sqrt(rowSums(matabsdev.all[,-1]^2)))
+colnames(d.all)[2] <- "dij"
+with(d.all, t.test(dij[dogsCoun$breed=="coun"], dij[dogsCoun$breed=="prehistoric"],
+                   var.equal=TRUE, alternative="less"))
+sprintf("d-values for coun: Mean = %2.3f, Variance = %2.3f",
+        mean(d.all$dij[dogsCoun$breed=="coun"]),var(d.all$dij[dogsCoun$breed=="coun"]))
+sprintf("d-values for Prehistoric: Mean = %2.3f, Variance = %2.3f",
+        mean(d.all$dij[dogsCoun$breed=="prehistoric"]),var(d.all$dij[dogsCoun$breed=="prehistoric"]))
+
+# Testing individual variance between prehistoric and coun with Levene's test
+leveneTest(x1 ~ breed, data = dogsCoun)
+leveneTest(x2 ~ breed, data = dogsCoun)
+leveneTest(x3 ~ breed, data = dogsCoun)
+leveneTest(x4 ~ breed, data = dogsCoun)
+leveneTest(x5 ~ breed, data = dogsCoun)
+leveneTest(x6 ~ breed, data = dogsCoun)
+leveneTest(x7 ~ breed, data = dogsCoun)
+leveneTest(x8 ~ breed, data = dogsCoun)
+leveneTest(x9 ~ breed, data = dogsCoun)
+```
+When comparing the prehistoric dog to the coun, we can assume that at least one variable mean differs between the two groups. This assumption is supported by the T2 tests of the x1, x3, x5, x7, x8, and x9 variables in which we reject the null hypothesis of equal means.
+However, when assessing the variance at both the univariate and multivariate levels by using the Van Valen and Levene's tests respectively, we do find sufficient evidence to suggest equal covariance matrices.
+Therefore, we can conclude that although coun is not as similar to the prehistoric dog as the modern dog, it is more similar than the jackal.
+
+Prehistoric vs. Wolf
+
+```{r}
+# Testing overall means between prehistoric and modern with Hotelling's test
+dogsWolf <- dogs %>% 
+  filter(breed %in% c("wolf", "prehistoric")) 
+t2testDog <- hotelling.test(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 ~ breed, data = dogsWolf)
+t2testDog 
+
+# Testing individual means between prehistoric and wolf with T2 test
+with(data = dogs,
+     t.test(x1[breed=="prehistoric"],
+            x1[breed=="wolf"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x2[breed=="prehistoric"],
+            x2[breed=="wolf"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x3[breed=="prehistoric"],
+            x3[breed=="wolf"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x4[breed=="prehistoric"],
+            x4[breed=="wolf"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x5[breed=="prehistoric"],
+            x5[breed=="wolf"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x6[breed=="prehistoric"],
+            x6[breed=="wolf"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x7[breed=="prehistoric"],
+            x7[breed=="wolf"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x8[breed=="prehistoric"],
+            x8[breed=="wolf"], var.equal = TRUE))
+with(data = dogs,
+     t.test(x9[breed=="prehistoric"],
+            x9[breed=="wolf"], var.equal = TRUE))
+
+# Testing overall variance between prehistoric and wolf with Van Valen's test
+matstand <- scale(dogs[,2:10])
+matwolf <- matstand[dogs$breed == "wolf",]
+matpre <- matstand[dogs$breed == "prehistoric",]
+vecmedianwolf <- apply(matwolf,2,median)
+vecmedianpre <- apply(matpre,2,median)
+matabsdevwolf <- abs(matwolf - matrix(rep(vecmedianwolf,nrow(matwolf)),
+                                    nrow=nrow(matwolf), byrow=TRUE))
+matabsdevpre <- abs(matpre - matrix(rep(vecmedianpre,nrow(matpre)),
+                                    nrow=nrow(matpre), byrow=TRUE))
+matabsdev.all <- rbind(matabsdevwolf,matabsdevpre)
+matabsdev.all <- data.frame(dogsWolf$breed, matabsdev.all)
+d.all <- data.frame(dogsWolf$breed,sqrt(rowSums(matabsdev.all[,-1]^2)))
+colnames(d.all)[2] <- "dij"
+with(d.all, t.test(dij[dogsWolf$breed=="wolf"], dij[dogsWolf$breed=="prehistoric"],
+                   var.equal=TRUE, alternative="less"))
+sprintf("d-values for wolf: Mean = %2.3f, Variance = %2.3f",
+        mean(d.all$dij[dogsWolf$breed=="wolf"]),var(d.all$dij[dogsWolf$breed=="wolf"]))
+sprintf("d-values for Prehistoric: Mean = %2.3f, Variance = %2.3f",
+        mean(d.all$dij[dogsWolf$breed=="prehistoric"]),var(d.all$dij[dogsWolf$breed=="prehistoric"]))
+
+# Testing individual variance between prehistoric and wolf with Levene's test
+leveneTest(x1 ~ breed, data = dogsWolf)
+leveneTest(x2 ~ breed, data = dogsWolf)
+leveneTest(x3 ~ breed, data = dogsWolf)
+leveneTest(x4 ~ breed, data = dogsWolf)
+leveneTest(x5 ~ breed, data = dogsWolf)
+leveneTest(x6 ~ breed, data = dogsWolf)
+leveneTest(x7 ~ breed, data = dogsWolf)
+leveneTest(x8 ~ breed, data = dogsWolf)
+leveneTest(x9 ~ breed, data = dogsWolf)
+```
+Finally, when comparing the prehistoric dog to the wolf, we can again assume that at least one variable mean differs between the groups. This is supported by the T2 tests of all of the variables except x4, where we reject the null hypthesis of equal means.
+Using the Van Valen and Levene's tests we fail to reject the null hypothesis and conclude that there is sufficient evidence to assume equal covariance matrices.
+Overall, we can conclude that the wolf has a similiar level of difference from the prehistoric dog as that of the coun, but not as different as the jackal.
+
+### Problem 2
+
+Is there evidence of differences between the size of males and females of the sample species for the first four groups?
+
+```{r}
+dogsModern <- dogs %>% 
+  filter(breed == "modern")
+t2testDog <- hotelling.test(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 ~ sex, data = dogsModern)
+t2testDog
+
+dogsJackal <- dogs %>% 
+  filter(breed == "jackal")
+t2testDog <- hotelling.test(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 ~ sex, data = dogsJackal)
+t2testDog
+
+dogsCoun <- dogs %>% 
+  filter(breed == "coun")
+t2testDog <- hotelling.test(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 ~ sex, data = dogsCoun)
+t2testDog
+
+dogsWolf <- dogs %>% 
+  filter(breed == "wolf")
+t2testDog <- hotelling.test(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 ~ sex, data = dogsWolf)
+t2testDog
+```
+When comparing the Male and Female examples of each breed, there is sufficient evidence to suggest at least one variable mean differs between the two groups for all breeds except the wolf. This means the size does not vary significantly between Male and Female wolves, but it does between Males and Females of modern dogs, jackals, and couns.
+
+### Problem 3
+
+Using a suitable graphical method, compare the distribution of the nine variables for the prehistoric and modern Thai dogs.
+
+```{r}
+ggpairs(dogsMod,columns = 2:10,aes(color = breed))
+```
+Using the Draftsman's plot to visually compare the distribution of variables between the prehistoric and modern Thai dog we can see significant differences on the x1, x4, x6, and x7 variables. This could possibly be due to an outlier that is apparent in the scatter plots in column 1.
